@@ -23,6 +23,7 @@ public class AssetBitmapHunterTest {
   @Mock Context context;
   @Mock Picasso picasso;
   @Mock Cache cache;
+  @Mock Cache diskCache;
   @Mock Stats stats;
   @Mock Dispatcher dispatcher;
   @Mock Downloader downloader;
@@ -39,7 +40,7 @@ public class AssetBitmapHunterTest {
 
     Action action = TestUtils.mockAction(key, uri);
     AssetBitmapHunter hunter =
-        spy(new AssetBitmapHunter(context, picasso, dispatcher, cache, stats, action));
+        spy(new AssetBitmapHunter(context, picasso, dispatcher, cache, diskCache, stats, action));
     doReturn(null).when(hunter).decodeAsset(anyString());
 
     hunter.decode(request);

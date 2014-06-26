@@ -23,7 +23,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.ContactsContract;
-
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -59,8 +58,8 @@ class ContactsPhotoBitmapHunter extends BitmapHunter {
   final Context context;
 
   ContactsPhotoBitmapHunter(Context context, Picasso picasso, Dispatcher dispatcher, Cache cache,
-      Stats stats, Action action) {
-    super(picasso, dispatcher, cache, stats, action);
+      Cache diskCache, Stats stats, Action action) {
+    super(picasso, dispatcher, cache, diskCache, stats, action);
     this.context = context;
   }
 

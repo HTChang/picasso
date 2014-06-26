@@ -35,6 +35,7 @@ public class MediaStoreBitmapHunterTest {
   @Mock Picasso picasso;
   @Mock Dispatcher dispatcher;
   @Mock Cache cache;
+  @Mock Cache diskCache;
   @Mock Stats stats;
 
   @Before public void setUp() {
@@ -83,6 +84,7 @@ public class MediaStoreBitmapHunterTest {
 
   private MediaStoreBitmapHunter create(ContentResolver contentResolver, Action action) {
     when(context.getContentResolver()).thenReturn(contentResolver);
-    return new MediaStoreBitmapHunter(context, picasso, dispatcher, cache, stats, action);
+    return new MediaStoreBitmapHunter(context, picasso, dispatcher, cache, diskCache, stats,
+        action);
   }
 }

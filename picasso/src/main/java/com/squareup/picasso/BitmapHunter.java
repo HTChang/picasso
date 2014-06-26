@@ -40,6 +40,8 @@ import static android.content.ContentResolver.SCHEME_FILE;
 import static android.provider.ContactsContract.Contacts;
 import static com.squareup.picasso.AssetBitmapHunter.ANDROID_ASSET;
 import static com.squareup.picasso.FaceDetector.Face;
+import static com.squareup.picasso.Picasso.LoadedFrom.CUSTOMDISK;
+import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
 import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
 import static com.squareup.picasso.Utils.OWNER_HUNTER;
 import static com.squareup.picasso.Utils.VERB_DECODED;
@@ -68,6 +70,7 @@ abstract class BitmapHunter implements Runnable {
   final Picasso picasso;
   final Dispatcher dispatcher;
   final Cache cache;
+  final Cache diskCache;
   final Stats stats;
   final String key;
   final Request data;
@@ -81,10 +84,12 @@ abstract class BitmapHunter implements Runnable {
   Exception exception;
   int exifRotation; // Determined during decoding of original resource.
 
-  BitmapHunter(Picasso picasso, Dispatcher dispatcher, Cache cache, Stats stats, Action action) {
+  BitmapHunter(Picasso picasso, Dispatcher dispatcher, Cache cache, Cache diskCache, Stats stats,
+      Action action) {
     this.picasso = picasso;
     this.dispatcher = dispatcher;
     this.cache = cache;
+    this.diskCache = diskCache;
     this.stats = stats;
     this.key = action.getKey();
     this.data = action.getRequest();
@@ -144,6 +149,19 @@ abstract class BitmapHunter implements Runnable {
           log(OWNER_HUNTER, VERB_DECODED, data.logId(), "from cache");
         }
         return bitmap;
+      } else {
+        if (diskCache != null) {
+          bitmap = diskCache.get(key);
+          if (bitmap != null) {
+            stats.dispatchDiskCacheHit();
+            loadedFrom = CUSTOMDISK;
+            if (picasso.loggingEnabled) {
+              log(OWNER_HUNTER, VERB_DECODED, data.logId(), "from disk");
+            }
+            return bitmap;
+          }
+          stats.dispatchDiskCacheMiss();
+        }
       }
     }
 
@@ -171,6 +189,11 @@ abstract class BitmapHunter implements Runnable {
         }
         if (bitmap != null) {
           stats.dispatchBitmapTransformed(bitmap);
+        }
+      }
+      if (diskCache != null) {
+        if (getLoadedFrom() != DISK) {
+          diskCache.set(key, bitmap);
         }
       }
     }
@@ -283,30 +306,36 @@ abstract class BitmapHunter implements Runnable {
   }
 
   static BitmapHunter forRequest(Context context, Picasso picasso, Dispatcher dispatcher,
-      Cache cache, Stats stats, Action action, Downloader downloader) {
+      Cache cache, Cache diskCache, Stats stats, Action action, Downloader downloader) {
     if (action.getRequest().resourceId != 0) {
-      return new ResourceBitmapHunter(context, picasso, dispatcher, cache, stats, action);
+      return new ResourceBitmapHunter(context, picasso, dispatcher, cache, diskCache, stats,
+          action);
     }
     Uri uri = action.getRequest().uri;
     String scheme = uri.getScheme();
     if (SCHEME_CONTENT.equals(scheme)) {
       if (Contacts.CONTENT_URI.getHost().equals(uri.getHost()) //
           && !uri.getPathSegments().contains(Contacts.Photo.CONTENT_DIRECTORY)) {
-        return new ContactsPhotoBitmapHunter(context, picasso, dispatcher, cache, stats, action);
+        return new ContactsPhotoBitmapHunter(context, picasso, dispatcher, cache, diskCache, stats,
+            action);
       } else if (MediaStore.AUTHORITY.equals(uri.getAuthority())) {
-        return new MediaStoreBitmapHunter(context, picasso, dispatcher, cache, stats, action);
+        return new MediaStoreBitmapHunter(context, picasso, dispatcher, cache, diskCache, stats,
+            action);
       } else {
-        return new ContentStreamBitmapHunter(context, picasso, dispatcher, cache, stats, action);
+        return new ContentStreamBitmapHunter(context, picasso, dispatcher, cache, diskCache, stats,
+            action);
       }
     } else if (SCHEME_FILE.equals(scheme)) {
       if (!uri.getPathSegments().isEmpty() && ANDROID_ASSET.equals(uri.getPathSegments().get(0))) {
-        return new AssetBitmapHunter(context, picasso, dispatcher, cache, stats, action);
+        return new AssetBitmapHunter(context, picasso, dispatcher, cache, diskCache, stats, action);
       }
-      return new FileBitmapHunter(context, picasso, dispatcher, cache, stats, action);
+      return new FileBitmapHunter(context, picasso, dispatcher, cache, diskCache, stats, action);
     } else if (SCHEME_ANDROID_RESOURCE.equals(scheme)) {
-      return new ResourceBitmapHunter(context, picasso, dispatcher, cache, stats, action);
+      return new ResourceBitmapHunter(context, picasso, dispatcher, cache, diskCache, stats,
+          action);
     } else {
-      return new NetworkBitmapHunter(picasso, dispatcher, cache, stats, action, downloader);
+      return new NetworkBitmapHunter(picasso, dispatcher, cache, diskCache, stats, action,
+          downloader);
     }
   }
 

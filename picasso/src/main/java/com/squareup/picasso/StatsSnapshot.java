@@ -25,8 +25,12 @@ import static com.squareup.picasso.Picasso.TAG;
 public class StatsSnapshot {
   public final int maxSize;
   public final int size;
+  public final int diskMaxSize;
+  public final int diskSize;
   public final long cacheHits;
   public final long cacheMisses;
+  public final long diskCacheHits;
+  public final long diskCacheMisses;
   public final long totalDownloadSize;
   public final long totalOriginalBitmapSize;
   public final long totalTransformedBitmapSize;
@@ -39,14 +43,19 @@ public class StatsSnapshot {
 
   public final long timeStamp;
 
-  public StatsSnapshot(int maxSize, int size, long cacheHits, long cacheMisses,
-      long totalDownloadSize, long totalOriginalBitmapSize, long totalTransformedBitmapSize,
-      long averageDownloadSize, long averageOriginalBitmapSize, long averageTransformedBitmapSize,
-      int downloadCount, int originalBitmapCount, int transformedBitmapCount, long timeStamp) {
+  public StatsSnapshot(int maxSize, int size, int diskMaxSize, int diskSize, long cacheHits,
+      long cacheMisses, long diskCacheHits, long diskCacheMisses, long totalDownloadSize,
+      long totalOriginalBitmapSize, long totalTransformedBitmapSize, long averageDownloadSize,
+      long averageOriginalBitmapSize, long averageTransformedBitmapSize, int downloadCount,
+      int originalBitmapCount, int transformedBitmapCount, long timeStamp) {
     this.maxSize = maxSize;
     this.size = size;
+    this.diskMaxSize = diskMaxSize;
+    this.diskSize = diskSize;
     this.cacheHits = cacheHits;
     this.cacheMisses = cacheMisses;
+    this.diskCacheHits = diskCacheHits;
+    this.diskCacheMisses = diskCacheMisses;
     this.totalDownloadSize = totalDownloadSize;
     this.totalOriginalBitmapSize = totalOriginalBitmapSize;
     this.totalTransformedBitmapSize = totalTransformedBitmapSize;
@@ -80,6 +89,17 @@ public class StatsSnapshot {
     writer.println(cacheHits);
     writer.print("  Cache Misses: ");
     writer.println(cacheMisses);
+    writer.println("Custom Disk Cache Stats");
+    writer.print("  Disk Max Cache Size: ");
+    writer.println(diskMaxSize);
+    writer.print("  Disk Cache Size: ");
+    writer.println(diskSize);
+    writer.print("  Disk Cache % Full: ");
+    writer.println((int) Math.ceil((float) diskSize / (diskMaxSize != 0 ? diskMaxSize : 1) * 100));
+    writer.print("  Disk Cache Hits: ");
+    writer.println(diskCacheHits);
+    writer.print("  Disk Cache Misses: ");
+    writer.println(diskCacheMisses);
     writer.println("Network Stats");
     writer.print("  Download Count: ");
     writer.println(downloadCount);
@@ -114,6 +134,14 @@ public class StatsSnapshot {
         + cacheHits
         + ", cacheMisses="
         + cacheMisses
+        + ", disk maxSize="
+        + diskMaxSize
+        + ", disk size="
+        + diskSize
+        + ", disk cacheHits="
+        + diskCacheHits
+        + ", disk cacheMisses="
+        + diskCacheMisses
         + ", downloadCount="
         + downloadCount
         + ", totalDownloadSize="

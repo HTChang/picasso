@@ -26,18 +26,23 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 class Stats {
   private static final int CACHE_HIT = 0;
   private static final int CACHE_MISS = 1;
-  private static final int BITMAP_DECODE_FINISHED = 2;
-  private static final int BITMAP_TRANSFORMED_FINISHED = 3;
-  private static final int DOWNLOAD_FINISHED = 4;
+  private static final int DISK_CACHE_HIT = 2;
+  private static final int DISK_CACHE_MISS = 3;
+  private static final int BITMAP_DECODE_FINISHED = 4;
+  private static final int BITMAP_TRANSFORMED_FINISHED = 5;
+  private static final int DOWNLOAD_FINISHED = 6;
 
   private static final String STATS_THREAD_NAME = Utils.THREAD_PREFIX + "Stats";
 
   final HandlerThread statsThread;
   final Cache cache;
+  final Cache diskCache;
   final Handler handler;
 
   long cacheHits;
   long cacheMisses;
+  long diskCacheHits;
+  long diskCacheMisses;
   long totalDownloadSize;
   long totalOriginalBitmapSize;
   long totalTransformedBitmapSize;
@@ -48,8 +53,9 @@ class Stats {
   int originalBitmapCount;
   int transformedBitmapCount;
 
-  Stats(Cache cache) {
+  Stats(Cache cache, Cache diskCache) {
     this.cache = cache;
+    this.diskCache = diskCache;
     this.statsThread = new HandlerThread(STATS_THREAD_NAME, THREAD_PRIORITY_BACKGROUND);
     this.statsThread.start();
     this.handler = new StatsHandler(statsThread.getLooper(), this);
@@ -75,6 +81,14 @@ class Stats {
     handler.sendEmptyMessage(CACHE_MISS);
   }
 
+  void dispatchDiskCacheHit() {
+    handler.sendEmptyMessage(DISK_CACHE_HIT);
+  }
+
+  void dispatchDiskCacheMiss() {
+    handler.sendEmptyMessage(DISK_CACHE_MISS);
+  }
+
   void shutdown() {
     statsThread.quit();
   }
@@ -85,6 +99,14 @@ class Stats {
 
   void performCacheMiss() {
     cacheMisses++;
+  }
+
+  void performDiskCacheHit() {
+    diskCacheHits++;
+  }
+
+  void performDiskCacheMiss() {
+    diskCacheMisses++;
   }
 
   void performDownloadFinished(Long size) {
@@ -106,8 +128,10 @@ class Stats {
   }
 
   StatsSnapshot createSnapshot() {
-    return new StatsSnapshot(cache.maxSize(), cache.size(), cacheHits, cacheMisses,
-        totalDownloadSize, totalOriginalBitmapSize, totalTransformedBitmapSize, averageDownloadSize,
+    return new StatsSnapshot(cache.maxSize(), cache.size(),
+        diskCache != null ? diskCache.maxSize() : 0, diskCache != null ? diskCache.size() : 0,
+        cacheHits, cacheMisses, diskCacheHits, diskCacheMisses, totalDownloadSize,
+        totalOriginalBitmapSize, totalTransformedBitmapSize, averageDownloadSize,
         averageOriginalBitmapSize, averageTransformedBitmapSize, downloadCount, originalBitmapCount,
         transformedBitmapCount, System.currentTimeMillis());
   }
@@ -138,6 +162,12 @@ class Stats {
           break;
         case CACHE_MISS:
           stats.performCacheMiss();
+          break;
+        case DISK_CACHE_HIT:
+          stats.performDiskCacheHit();
+          break;
+        case DISK_CACHE_MISS:
+          stats.performDiskCacheMiss();
           break;
         case BITMAP_DECODE_FINISHED:
           stats.performBitmapDecoded(msg.arg1);
