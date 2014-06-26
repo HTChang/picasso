@@ -33,9 +33,9 @@ class NetworkBitmapHunter extends BitmapHunter {
 
   int retryCount;
 
-  public NetworkBitmapHunter(Picasso picasso, Dispatcher dispatcher, Cache cache, Stats stats,
-      Action action, Downloader downloader) {
-    super(picasso, dispatcher, cache, stats, action);
+  public NetworkBitmapHunter(Picasso picasso, Dispatcher dispatcher, Cache cache, Cache diskCache,
+      Stats stats, Action action, Downloader downloader) {
+    super(picasso, dispatcher, cache, diskCache, stats, action);
     this.downloader = downloader;
     this.retryCount = DEFAULT_RETRY_COUNT;
   }

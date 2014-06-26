@@ -67,6 +67,7 @@ public class DispatcherTest {
   @Mock Handler mainThreadHandler;
   @Mock Downloader downloader;
   @Mock Cache cache;
+  @Mock Cache diskCache;
   @Mock Stats stats;
   private Dispatcher dispatcher;
 
@@ -408,6 +409,6 @@ public class DispatcherTest {
     when(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager);
     when(context.checkCallingOrSelfPermission(anyString())).thenReturn(
         scansNetworkChanges ? PERMISSION_GRANTED : PERMISSION_DENIED);
-    return new Dispatcher(context, service, mainThreadHandler, downloader, cache, stats);
+    return new Dispatcher(context, service, mainThreadHandler, downloader, cache, diskCache, stats);
   }
 }

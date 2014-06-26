@@ -30,8 +30,8 @@ import static android.media.ExifInterface.TAG_ORIENTATION;
 class FileBitmapHunter extends ContentStreamBitmapHunter {
 
   FileBitmapHunter(Context context, Picasso picasso, Dispatcher dispatcher, Cache cache,
-      Stats stats, Action action) {
-    super(context, picasso, dispatcher, cache, stats, action);
+      Cache diskCache, Stats stats, Action action) {
+    super(context, picasso, dispatcher, cache, diskCache, stats, action);
   }
 
   @Override Bitmap decode(Request data)

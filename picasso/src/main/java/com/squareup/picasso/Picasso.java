@@ -119,6 +119,7 @@ public class Picasso {
   final Context context;
   final Dispatcher dispatcher;
   final Cache cache;
+  final Cache diskCache;
   final Stats stats;
   final Map<Object, Action> targetToAction;
   final Map<ImageView, DeferredRequestCreator> targetToDeferredRequestCreator;
@@ -129,12 +130,13 @@ public class Picasso {
 
   boolean shutdown;
 
-  Picasso(Context context, Dispatcher dispatcher, Cache cache, Listener listener,
+  Picasso(Context context, Dispatcher dispatcher, Cache cache, Cache diskCache, Listener listener,
       RequestTransformer requestTransformer, Stats stats, boolean indicatorsEnabled,
       boolean loggingEnabled) {
     this.context = context;
     this.dispatcher = dispatcher;
     this.cache = cache;
+    this.diskCache = diskCache;
     this.listener = listener;
     this.requestTransformer = requestTransformer;
     this.stats = stats;
@@ -302,6 +304,9 @@ public class Picasso {
       return;
     }
     cache.clear();
+    if (diskCache != null) {
+      diskCache.clear();
+    }
     cleanupThread.shutdown();
     stats.shutdown();
     dispatcher.shutdown();
@@ -493,6 +498,7 @@ public class Picasso {
     private Downloader downloader;
     private ExecutorService service;
     private Cache cache;
+    private Cache diskCache;
     private Listener listener;
     private RequestTransformer transformer;
 
@@ -540,6 +546,18 @@ public class Picasso {
         throw new IllegalStateException("Memory cache already set.");
       }
       this.cache = memoryCache;
+      return this;
+    }
+
+    /** Specify the disk cache used for the most recent images. */
+    public Builder diskCache(Cache diskCache) {
+      if (diskCache == null) {
+        throw new IllegalArgumentException("Disk cache must not be null.");
+      }
+      if (this.diskCache != null) {
+        throw new IllegalStateException("Disk cache already set.");
+      }
+      this.diskCache = diskCache;
       return this;
     }
 
@@ -614,11 +632,12 @@ public class Picasso {
         transformer = RequestTransformer.IDENTITY;
       }
 
-      Stats stats = new Stats(cache);
+      Stats stats = new Stats(cache, diskCache);
 
-      Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader, cache, stats);
+      Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader, cache,
+          diskCache, stats);
 
-      return new Picasso(context, dispatcher, cache, listener, transformer, stats,
+      return new Picasso(context, dispatcher, cache, diskCache, listener, transformer, stats,
           indicatorsEnabled, loggingEnabled);
     }
   }
@@ -627,7 +646,8 @@ public class Picasso {
   public enum LoadedFrom {
     MEMORY(Color.GREEN),
     DISK(Color.YELLOW),
-    NETWORK(Color.RED);
+    NETWORK(Color.RED),
+    CUSTOMDISK(Color.BLUE);
 
     final int debugColor;
 
