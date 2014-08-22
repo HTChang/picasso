@@ -75,6 +75,7 @@ abstract class BitmapHunter implements Runnable {
   final String key;
   final Request data;
   final boolean skipMemoryCache;
+  final boolean skipDiskCache;
 
   Action action;
   List<Action> actions;
@@ -94,6 +95,7 @@ abstract class BitmapHunter implements Runnable {
     this.key = action.getKey();
     this.data = action.getRequest();
     this.skipMemoryCache = action.skipCache;
+    this.skipDiskCache = action.skipDiskCache;
     this.action = action;
   }
 
@@ -149,19 +151,21 @@ abstract class BitmapHunter implements Runnable {
           log(OWNER_HUNTER, VERB_DECODED, data.logId(), "from cache");
         }
         return bitmap;
-      } else {
-        if (diskCache != null) {
-          bitmap = diskCache.get(key);
-          if (bitmap != null) {
-            stats.dispatchDiskCacheHit();
-            loadedFrom = CUSTOMDISK;
-            if (picasso.loggingEnabled) {
-              log(OWNER_HUNTER, VERB_DECODED, data.logId(), "from disk");
-            }
-            return bitmap;
+      }
+    }
+
+    if (!skipDiskCache) {
+      if (diskCache != null) {
+        bitmap = diskCache.get(key);
+        if (bitmap != null) {
+          stats.dispatchDiskCacheHit();
+          loadedFrom = CUSTOMDISK;
+          if (picasso.loggingEnabled) {
+            log(OWNER_HUNTER, VERB_DECODED, data.logId(), "from disk");
           }
-          stats.dispatchDiskCacheMiss();
+          return bitmap;
         }
+        stats.dispatchDiskCacheMiss();
       }
     }
 
@@ -253,6 +257,10 @@ abstract class BitmapHunter implements Runnable {
 
   boolean shouldSkipMemoryCache() {
     return skipMemoryCache;
+  }
+
+  boolean shouldSkipDiskCache() {
+    return skipDiskCache;
   }
 
   boolean shouldRetry(boolean airplaneMode, NetworkInfo info) {

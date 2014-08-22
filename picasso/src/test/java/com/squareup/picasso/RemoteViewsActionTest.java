@@ -69,7 +69,7 @@ public class RemoteViewsActionTest {
   }
 
   private TestableRemoteViewsAction createAction(int errorResId) {
-    return new TestableRemoteViewsAction(picasso, null, remoteViews, 1, errorResId, false,
+    return new TestableRemoteViewsAction(picasso, null, remoteViews, 1, errorResId, false, false,
         URI_KEY_1);
   }
 
@@ -80,8 +80,8 @@ public class RemoteViewsActionTest {
 
   static class TestableRemoteViewsAction extends RemoteViewsAction {
     TestableRemoteViewsAction(Picasso picasso, Request data, RemoteViews remoteViews, int viewId,
-        int errorResId, boolean skipCache, String key) {
-      super(picasso, data, remoteViews, viewId, errorResId, skipCache, key);
+        int errorResId, boolean skipCache, boolean skipDiskCache, String key) {
+      super(picasso, data, remoteViews, viewId, errorResId, skipCache, skipDiskCache, key);
     }
 
     @Override void update() {
