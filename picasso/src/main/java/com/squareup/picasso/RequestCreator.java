@@ -76,6 +76,7 @@ public class RequestCreator {
   private final Picasso picasso;
   private final Request.Builder data;
 
+  private boolean fromCacheOnly;
   private boolean skipMemoryCache;
   private boolean skipDiskCache;
   private boolean noFade;
@@ -281,6 +282,15 @@ public class RequestCreator {
     return this;
   }
 
+  /**
+   * Indicate that this action should not execute {@link BitmapHunter#decode(Request)} but
+   * only load images that being cached before.
+   */
+  public RequestCreator fromCacheOnly() {
+    fromCacheOnly = true;
+    return this;
+  }
+
   /** Disable brief fade in of images loaded from the disk cache or network. */
   public RequestCreator noFade() {
     noFade = true;
@@ -307,7 +317,8 @@ public class RequestCreator {
     Request finalData = createRequest(started);
     String key = createKey(finalData, new StringBuilder());
 
-    Action action = new GetAction(picasso, finalData, skipMemoryCache, skipDiskCache, key);
+    Action action = new GetAction(picasso, finalData, fromCacheOnly, skipMemoryCache,
+        skipDiskCache, key);
     return forRequest(picasso.context, picasso, picasso.dispatcher, picasso.cache,
         picasso.diskCache, picasso.stats, action, picasso.dispatcher.downloader).hunt();
   }
@@ -328,7 +339,8 @@ public class RequestCreator {
       Request request = createRequest(started);
       String key = createKey(request, new StringBuilder());
 
-      Action action = new FetchAction(picasso, request, skipMemoryCache, skipDiskCache, key);
+      Action action = new FetchAction(picasso, request, fromCacheOnly, skipMemoryCache,
+          skipDiskCache, key);
       picasso.submit(action);
     }
   }
@@ -414,7 +426,7 @@ public class RequestCreator {
     target.onPrepareLoad(drawable);
 
     Action action =
-        new TargetAction(picasso, target, request, skipMemoryCache, skipDiskCache,
+        new TargetAction(picasso, target, request, fromCacheOnly, skipMemoryCache, skipDiskCache,
             errorResId, errorDrawable, requestKey);
     picasso.enqueueAndSubmit(action);
   }
@@ -447,7 +459,7 @@ public class RequestCreator {
 
     RemoteViewsAction action =
         new NotificationAction(picasso, request, remoteViews, viewId, notificationId, notification,
-            skipMemoryCache, skipDiskCache, errorResId, key);
+            fromCacheOnly, skipMemoryCache, skipDiskCache, errorResId, key);
 
     performRemoteViewInto(action);
   }
@@ -478,8 +490,8 @@ public class RequestCreator {
     String key = createKey(request);
 
     RemoteViewsAction action =
-        new AppWidgetAction(picasso, request, remoteViews, viewId, appWidgetIds, skipMemoryCache,
-            skipDiskCache, errorResId, key);
+        new AppWidgetAction(picasso, request, remoteViews, viewId, appWidgetIds, fromCacheOnly,
+            skipMemoryCache, skipDiskCache, errorResId, key);
 
     performRemoteViewInto(action);
   }
@@ -552,8 +564,8 @@ public class RequestCreator {
     setPlaceholder(target, placeholderResId, placeholderDrawable);
 
     Action action =
-        new ImageViewAction(picasso, target, request, skipMemoryCache, skipDiskCache, noFade,
-            errorResId, errorDrawable, requestKey, callback);
+        new ImageViewAction(picasso, target, request, fromCacheOnly, skipMemoryCache,
+            skipDiskCache, noFade, errorResId, errorDrawable, requestKey, callback);
 
     picasso.enqueueAndSubmit(action);
   }

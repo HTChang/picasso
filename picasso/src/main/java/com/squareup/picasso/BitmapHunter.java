@@ -74,6 +74,7 @@ abstract class BitmapHunter implements Runnable {
   final Stats stats;
   final String key;
   final Request data;
+  final boolean fromCacheOnly;
   final boolean skipMemoryCache;
   final boolean skipDiskCache;
 
@@ -94,6 +95,7 @@ abstract class BitmapHunter implements Runnable {
     this.stats = stats;
     this.key = action.getKey();
     this.data = action.getRequest();
+    this.fromCacheOnly = action.fromCacheOnly;
     this.skipMemoryCache = action.skipCache;
     this.skipDiskCache = action.skipDiskCache;
     this.action = action;
@@ -140,7 +142,7 @@ abstract class BitmapHunter implements Runnable {
   abstract Bitmap decode(Request data) throws IOException;
 
   Bitmap hunt() throws IOException {
-    Bitmap bitmap;
+    Bitmap bitmap = null;
 
     if (!skipMemoryCache) {
       bitmap = cache.get(key);
@@ -169,7 +171,9 @@ abstract class BitmapHunter implements Runnable {
       }
     }
 
-    bitmap = decode(data);
+    if (!fromCacheOnly) {
+      bitmap = decode(data);
+    }
 
     if (bitmap != null) {
       if (picasso.loggingEnabled) {

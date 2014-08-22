@@ -24,11 +24,11 @@ class ImageViewAction extends Action<ImageView> {
 
   Callback callback;
 
-  ImageViewAction(Picasso picasso, ImageView imageView, Request data, boolean skipCache,
-      boolean skipDiskCache, boolean noFade, int errorResId, Drawable errorDrawable, String key,
-      Callback callback) {
-    super(picasso, imageView, data, skipCache, skipDiskCache, noFade, errorResId, errorDrawable,
-        key);
+  ImageViewAction(Picasso picasso, ImageView imageView, Request data, boolean fromCacheOnly,
+      boolean skipCache, boolean skipDiskCache, boolean noFade, int errorResId,
+      Drawable errorDrawable, String key, Callback callback) {
+    super(picasso, imageView, data, fromCacheOnly, skipCache, skipDiskCache, noFade, errorResId,
+        errorDrawable, key);
     this.callback = callback;
   }
 

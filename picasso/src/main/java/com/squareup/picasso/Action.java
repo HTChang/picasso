@@ -33,6 +33,7 @@ abstract class Action<T> {
   final Picasso picasso;
   final Request request;
   final WeakReference<T> target;
+  final boolean fromCacheOnly;
   final boolean skipCache;
   final boolean skipDiskCache;
   final boolean noFade;
@@ -43,11 +44,12 @@ abstract class Action<T> {
   boolean willReplay;
   boolean cancelled;
 
-  Action(Picasso picasso, T target, Request request, boolean skipCache, boolean skipDiskCache,
-      boolean noFade, int errorResId, Drawable errorDrawable, String key) {
+  Action(Picasso picasso, T target, Request request, boolean fromCacheOnly, boolean skipCache,
+      boolean skipDiskCache, boolean noFade, int errorResId, Drawable errorDrawable, String key) {
     this.picasso = picasso;
     this.request = request;
     this.target = new RequestWeakReference<T>(this, target, picasso.referenceQueue);
+    this.fromCacheOnly = fromCacheOnly;
     this.skipCache = skipCache;
     this.skipDiskCache = skipDiskCache;
     this.noFade = noFade;

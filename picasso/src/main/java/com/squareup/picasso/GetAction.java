@@ -18,8 +18,9 @@ package com.squareup.picasso;
 import android.graphics.Bitmap;
 
 class GetAction extends Action<Void> {
-  GetAction(Picasso picasso, Request data, boolean skipCache, boolean skipDiskCache, String key) {
-    super(picasso, null, data, skipCache, skipDiskCache, false, 0, null, key);
+  GetAction(Picasso picasso, Request data, boolean fromCacheOnly, boolean skipCache,
+      boolean skipDiskCache, String key) {
+    super(picasso, null, data, fromCacheOnly, skipCache, skipDiskCache, false, 0, null, key);
   }
 
   @Override void complete(Bitmap result, Picasso.LoadedFrom from) {
